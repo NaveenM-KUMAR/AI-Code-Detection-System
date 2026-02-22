@@ -20,13 +20,6 @@ To install, clone the repository and navigate to the directory:
 ```bash
 git clone https://github.com/NaveenM-KUMAR/AI-Code-Detection-System.git
 
-```
-<img width="1878" height="804" alt="ai code ph" src="https://github.com/user-attachments/assets/b256aad3-d87c-4829-932d-8d2eae9bf239" />
-<img width="1874" height="798" alt="ai code ph1" src="https://github.com/user-attachments/assets/58d2884a-dfac-4a5b-9c3c-3f321cb8a2ce" />
-<img width="825" height="882" alt="ai code ph2" src="https://github.com/user-attachments/assets/e507f102-bc5d-46e7-b827-7ede50e3d38a" />
-<img width="817" height="870" alt="ai code ph3" src="https://github.com/user-attachments/assets/d6f8c432-3fb4-48fb-a419-2ac32ddd4b9c" />
-<img width="834" height="892" alt="ai code ph4" src="https://github.com/user-attachments/assets/636314c1-9d69-4df6-a75a-75cfcab0f399" />
-
 =======
 # AI-Code-Detection-System
 An AI-powered system that classifies code as human-written or AI-generated using feature extraction and heuristics.
