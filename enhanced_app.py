@@ -14,7 +14,7 @@ import traceback
 from pygments.lexers import guess_lexer, guess_lexer_for_filename
 from pygments.util import ClassNotFound
 
-# Add PDF support
+
 try:
     import PyPDF2
 except ImportError:
@@ -22,21 +22,20 @@ except ImportError:
 
 app = Flask(__name__)
 
-# Global variables for caching and performance
+
 model_cache = {}
 cache_lock = threading.Lock()
 executor = ThreadPoolExecutor(max_workers=8)
 
-# File upload configuration
+
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'txt', 'py', 'js', 'java', 'cpp', 'c', 'cs', 'php', 'rb', 'go', 'rs', 'swift', 'kt', 'scala', 'html', 'css', 'xml', 'json', 'sql', 'sh', 'bat', 'ps1', 'md', 'pdf', 'zip', 'rar', '7z'}
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  # 50MB max file size
+app.config['MAX_CONTENT_LENGTH'] = 50 * 1024 * 1024  
 
-# Create upload directory
+
 os.makedirs(UPLOAD_FOLDER, exist_ok=True)
 
-# Initialize the enhanced analyzer
 analyzer = None
 
 EXTENSION_LANGUAGE_MAP = {
@@ -79,7 +78,7 @@ def extract_code_from_file(file_path):
     try:
         file_ext = file_path.rsplit('.', 1)[1].lower()
 
-        # --- PDF SUPPORT ---
+        
         if file_ext == 'pdf':
             if not PyPDF2:
                 return None, "PDF support not installed"
@@ -105,7 +104,7 @@ def extract_code_from_file(file_path):
             except Exception as e:
                 return None, f"PDF read error: {str(e)}"
 
-        # --- ZIP/RAR/7Z SUPPORT ---
+
         elif file_ext in ['zip', 'rar', '7z']:
             extracted_dir = tempfile.mkdtemp()
             try:
@@ -147,23 +146,23 @@ def extract_code_from_file(file_path):
         return None, f"Error reading file: {str(e)}"
 def estimate_processing_time(code_length):
     """Estimate processing time based on code length"""
-    # Base time: 0.1s for small code, scales with length
+
     base_time = 0.1
-    length_factor = code_length / 1000  # 1s per 1000 characters
-    return min(base_time + length_factor, 5.0)  # Max 5 seconds
+    length_factor = code_length / 1000  
+    return min(base_time + length_factor, 5.0)  
 
 def detect_language_perfect(code, filename=None):
-    # 0. If extension is .py, always return Python
+    
     if filename and filename.lower().endswith('.py'):
         return 'Python'
-    # 1. Try Pygments
+ 
     try:
         if filename:
             lexer = guess_lexer_for_filename(filename, code)
         else:
             lexer = guess_lexer(code)
         pygments_lang = lexer.name
-        # Heuristic: If Pygments says Transact-SQL but code looks like Python, override
+      
         if not filename and pygments_lang == 'Transact-SQL':
             if any(keyword in code for keyword in ['def ', 'import ', '#', 'print(', 'self', 'class ']):
                 return 'Python'
@@ -171,13 +170,13 @@ def detect_language_perfect(code, filename=None):
             return pygments_lang
     except ClassNotFound:
         pass
-    # 2. Fallback to file extension
+
     if filename and '.' in filename:
         ext = filename.rsplit('.', 1)[1].lower()
         return EXTENSION_LANGUAGE_MAP.get(ext, 'Unknown')
     return 'Unknown'
 
-# Initialize on startup
+
 initialize_analyzer()
 
 @app.route('/')
@@ -211,7 +210,7 @@ def analyze_code():
         file_info = None
         filename = None
         
-        # Handle file upload
+     
         if 'file' in request.files:
             file = request.files['file']
             if file.filename == '':
@@ -222,7 +221,7 @@ def analyze_code():
                 file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
                 file.save(file_path)
                 
-                # Extract code from file
+                
                 extracted_code, error = extract_code_from_file(file_path)
                 if error:
                     return jsonify({'error': error}), 400
@@ -234,35 +233,31 @@ def analyze_code():
                     'type': filename.rsplit('.', 1)[1].lower()
                 }
                 
-                # Clean up uploaded file
+
                 try:
                     os.remove(file_path)
                 except:
                     pass
             else:
                 return jsonify({'error': 'File type not allowed.'}), 400
-        
-        # Handle JSON input
+
         else:
             data = request.get_json()
             code = data.get('code', '')
         
         if not code or not code.strip():
             return jsonify({'error': 'Please provide some code to analyze or upload a file.'}), 400
-        
-        # Estimate processing time
+
         estimated_time = estimate_processing_time(len(code))
-        
-        # Use enhanced analyzer for prediction
+  
         prediction_result = analyzer.predict(code) if analyzer is not None else {'prediction': 'Error', 'confidence': 0, 'ai_probability': 0, 'human_probability': 0, 'features_used': 0, 'neural_features': 0, 'processing_time': 0, 'comprehensive_analysis': {}, 'model_type': 'none'}
         
-        # Detect language using Pygments
+    
         detected_language = detect_language_perfect(code, filename if file_info else None)
-        
-        # Calculate total processing time
+
         total_time = time.time() - start_time
         
-        # Prepare response
+
         response = {
             'prediction': prediction_result['prediction'],
             'confidence': prediction_result['confidence'],
@@ -284,7 +279,7 @@ def analyze_code():
             'complexity': prediction_result['comprehensive_analysis'].get('complexity', {})
         }
         
-        # Add file information if available
+
         if file_info:
             response['file_info'] = file_info
         
@@ -311,7 +306,7 @@ def upload_file():
             file_path = os.path.join(app.config['UPLOAD_FOLDER'], filename)
             file.save(file_path)
             
-            # Extract code from file
+
             try:
                 extracted_code, error = extract_code_from_file(file_path)
                 if error:
@@ -321,13 +316,13 @@ def upload_file():
                 traceback.print_exc()
                 return jsonify({'error': f'Error extracting code: {str(e)}'}), 500
             
-            # Clean up uploaded file
+
             try:
                 os.remove(file_path)
             except Exception as e:
                 print(f"Error cleaning up uploaded file: {e}")
             
-            # Analyze the extracted code
+        
             return analyze_code_internal(extracted_code, filename)
         else:
             return jsonify({'error': 'File type not allowed'}), 400
@@ -342,19 +337,18 @@ def analyze_code_internal(code, filename=None):
     try:
         start_time = time.time()
         
-        # Estimate processing time
+
         estimated_time = estimate_processing_time(len(code))
         
-        # Use enhanced analyzer for prediction
+      
         prediction_result = analyzer.predict(code) if analyzer is not None else {'prediction': 'Error', 'confidence': 0, 'ai_probability': 0, 'human_probability': 0, 'features_used': 0, 'neural_features': 0, 'processing_time': 0, 'comprehensive_analysis': {}, 'model_type': 'none'}
         
-        # Detect language using Pygments
+        
         detected_language = detect_language_perfect(code, filename)
         
-        # Calculate total processing time
+       
         total_time = time.time() - start_time
-        
-        # Prepare response
+
         response = {
             'prediction': prediction_result['prediction'],
             'confidence': prediction_result['confidence'],
@@ -376,7 +370,7 @@ def analyze_code_internal(code, filename=None):
             'complexity': prediction_result['comprehensive_analysis'].get('complexity', {})
         }
         
-        # Add file information if available
+     
         if filename:
             response['file_info'] = {
                 'filename': filename,
