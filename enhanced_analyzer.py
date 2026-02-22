@@ -23,12 +23,12 @@ class EnhancedCodeAnalyzer:
         self.feature_cache = {}
         self.cache_lock = threading.Lock()
         
-        # Initialize models
+
         self.neural_model = None
         self.scaler = None
         self.label_encoder = None
         
-        # Performance optimizations
+       
         self.compiled_patterns = {
             'function_calls': re.compile(r'\b\w+\s*\('),
             'method_calls': re.compile(r'\.\w+'),
@@ -70,7 +70,7 @@ class EnhancedCodeAnalyzer:
             scaled = 1 / (1 + np.exp(-logit / T))
             return scaled
         
-        # Load models in background
+
         self._load_models()
         print("Enhanced Code Analyzer initialized (Comprehensive Analysis)")
 
@@ -88,19 +88,16 @@ class EnhancedCodeAnalyzer:
         try:
             model_dir = "/mnt/data"
 
-        # --- PRIMARY MODELS (Improved) ---
+
             improved_model = os.path.join(model_dir, "improved_neural_model.pkl")
             improved_scaler = os.path.join(model_dir, "improved_scaler.pkl")
             improved_encoder = os.path.join(model_dir, "improved_label_encoder.pkl")
 
-        # --- FALLBACK MODELS (Simple) ---
+
             simple_model = os.path.join(model_dir, "simple_neural_model.pkl")
             simple_scaler = os.path.join(model_dir, "simple_neural_scaler.pkl")
             simple_encoder = os.path.join(model_dir, "simple_neural_label_encoder.pkl")
 
-        # -------------------------------
-        # Load MODEL (primary → fallback)
-        # -------------------------------
             if os.path.exists(improved_model):
                 self.neural_model = joblib.load(improved_model)
                 print("Loaded: improved_neural_model.pkl")
@@ -110,9 +107,7 @@ class EnhancedCodeAnalyzer:
             else:
                 print("❌ No neural model found")
 
-        # -------------------------------
-        # Load SCALER (primary → fallback)
-        # -------------------------------
+        
             if os.path.exists(improved_scaler):
                 self.scaler = joblib.load(improved_scaler)
                 print("Loaded: improved_scaler.pkl")
@@ -122,9 +117,7 @@ class EnhancedCodeAnalyzer:
             else:
                 print("❌ No scaler found")
 
-        # -----------------------------------------
-        # Load LABEL ENCODER (primary → fallback)
-        # -----------------------------------------
+
             if os.path.exists(improved_encoder):
                 self.label_encoder = joblib.load(improved_encoder)
                 print("Loaded: improved_label_encoder.pkl")
@@ -143,27 +136,22 @@ class EnhancedCodeAnalyzer:
     def extract_features_fast(self, code: str) -> List[float]:
         start_time = time.time()
         
-        # Basic features (optimized)
+
         basic_features = self._extract_basic_features(code)
         
-        # Advanced features (optimized)
+
         advanced_features = self._extract_advanced_features_cached(code)
-        
-        # Style features (optimized)
+
         style_features = self._extract_style_features(code)
-        
-        # Enhanced features (optimized)
+  
         enhanced_features = self._extract_enhanced_features(code)
         
-        # Comprehensive analysis features
+       
         comprehensive_features = self._extract_comprehensive_features(code)
         
-        # Combine all features
+       
         features = basic_features + advanced_features + style_features + enhanced_features + comprehensive_features
-        
-        # Always return exactly 80 features
-        # Always return EXACTLY 80 features
-        # FINAL FIX — exactly 70 features
+     
         if len(features) < 70:
             features += [0.0] * (70 - len(features))
         elif len(features) > 70:
@@ -177,13 +165,11 @@ class EnhancedCodeAnalyzer:
         """Extract basic code statistics (safe + consistent)."""
         features = []
 
-    # Basic lengths
+
         features.append(len(code))                  # 1
         features.append(code.count("\n"))           # 2
         features.append(len(code.split()))          # 3
 
-    # Character distribution
-        # Character distribution
         alpha = sum(c.isalpha() for c in code)
         digit = sum(c.isdigit() for c in code)
         space = sum(c.isspace() for c in code)
@@ -191,7 +177,6 @@ class EnhancedCodeAnalyzer:
         punct = sum(c in ";:,." for c in code)
         features += [alpha, digit, space, brackets, punct]
 
-    # Line statistics
         lines = code.split("\n")
         lengths = [len(l) for l in lines if l.strip()]
         if lengths:
@@ -229,7 +214,7 @@ class EnhancedCodeAnalyzer:
 
             import_count = len(tree.imports)
 
-        # RETURNS EXACTLY 8 values like Python block
+       
             return [
                 method_count,      # functions
                 class_count,       # classes
@@ -266,13 +251,13 @@ class EnhancedCodeAnalyzer:
     def _extract_advanced_features_cached(self, code: str) -> List[float]:
         features = []
 
-        # Comment ratio
+        
         lines = code.split("\n")
         comment_lines = sum(l.strip().startswith(("#", "//", "/*")) for l in lines)
         features.append(comment_lines)                             # 1
         features.append(comment_lines / max(len(lines), 1))        # 2
 
-    # Language detection
+   
         lang = self._detect_language(code)
 
         if "java" in lang:
@@ -338,53 +323,52 @@ class EnhancedCodeAnalyzer:
         """Extract enhanced features that simulate neural-like patterns (optimized)"""
         features = []
         
-        # Code complexity metrics (optimized with compiled patterns)
+        
         features.append(len(self.compiled_patterns['function_calls'].findall(code)))
         features.append(len(self.compiled_patterns['method_calls'].findall(code)))
         features.append(len(self.compiled_patterns['camel_case'].findall(code)))
         features.append(len(self.compiled_patterns['snake_case'].findall(code)))
         
-        # Code patterns (optimized)
         patterns = ['return', 'print', 'assert', 'raise', 'with', 'async', 'await']
         for pattern in patterns:
             features.append(code.count(pattern))
         
-        # Variable patterns (optimized)
+       
         features.append(len(self.compiled_patterns['variables'].findall(code)))
         features.append(len(self.compiled_patterns['add_assign'].findall(code)))
         features.append(len(self.compiled_patterns['sub_assign'].findall(code)))
         
-        # String patterns (optimized)
+        
         features.append(code.count('"'))
         features.append(code.count("'"))
         features.append(code.count('f"'))
         features.append(code.count("f'"))
         
-        # Number patterns (optimized)
+      
         features.append(len(self.compiled_patterns['floats'].findall(code)))
         features.append(len(self.compiled_patterns['integers'].findall(code)))
         
-        # Control flow patterns (optimized)
+        
         control_patterns = ['break', 'continue', 'pass']
         for pattern in control_patterns:
             features.append(code.count(pattern))
         
-        # Error handling (optimized)
+        
         error_patterns = ['except', 'finally', 'else:']
         for pattern in error_patterns:
             features.append(code.count(pattern))
         
-        # Documentation (optimized)
+       
         doc_patterns = ['"""', "'''", 'TODO', 'FIXME', 'HACK']
         for pattern in doc_patterns:
             features.append(code.count(pattern))
         
-        # Modern Python features (optimized)
+       
         modern_patterns = ['lambda', 'yield', 'generator', 'decorator']
         for pattern in modern_patterns:
             features.append(code.count(pattern))
         
-        # Code quality indicators (optimized)
+       
         features.append(len(self.compiled_patterns['mixed_case'].findall(code)))
         features.append(len(self.compiled_patterns['multiple_spaces'].findall(code)))
         features.append(len(self.compiled_patterns['tabs'].findall(code)))
@@ -394,7 +378,7 @@ class EnhancedCodeAnalyzer:
     def _extract_comprehensive_features(self, code: str) -> List[float]:
         features = []
 
-    # pattern-based features
+   
         features.append(len(self.compiled_patterns['type_hints'].findall(code)))
         features.append(len(self.compiled_patterns['f_strings'].findall(code)))
         features.append(len(self.compiled_patterns['list_comprehensions'].findall(code)))
@@ -408,7 +392,7 @@ class EnhancedCodeAnalyzer:
         features.append(len(self.compiled_patterns['private_methods'].findall(code)))
         features.append(len(self.compiled_patterns['constants'].findall(code)))
 
-    # entropy
+ 
         char_freq = Counter(code)
         total_chars = len(code)
         if total_chars > 0:
@@ -418,12 +402,12 @@ class EnhancedCodeAnalyzer:
         else:
             features.append(0)
 
-    # unique identifier ratio
+  
         words = self.compiled_patterns['words'].findall(code)
         unique_words = len(set(words))
         features.append(unique_words / max(len(words), 1))
 
-    # function length (Python only)
+  
         lang = self._detect_language(code)
         if "python" in lang:
             try:
@@ -446,7 +430,7 @@ class EnhancedCodeAnalyzer:
         """Comprehensive code analysis with detailed insights"""
         analysis = {}
         
-        # Basic metrics
+       
         lines = code.split('\n')
         analysis['basic_metrics'] = {
             'total_lines': len(lines),
@@ -457,7 +441,7 @@ class EnhancedCodeAnalyzer:
             'average_line_length': np.mean([len(line) for line in lines if line.strip()]) if lines else 0
         }
         
-        # Complexity analysis
+        
         try:
             tree = ast.parse(code)
             functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
@@ -479,7 +463,7 @@ class EnhancedCodeAnalyzer:
                 'assignments': 0, 'loops': 0, 'conditionals': 0, 'exceptions': 0
             }
         
-        # Style analysis
+       
         analysis['style'] = {
             'indentation_consistency': self._analyze_indentation(code),
             'naming_conventions': self._analyze_naming_conventions(code),
@@ -487,9 +471,7 @@ class EnhancedCodeAnalyzer:
             'line_length_variation': np.std([len(line) for line in lines if line.strip()]) if lines else 0
         }
         
-        # Language detection removed - handled by enhanced_app.py with Pygments
-        
-        # Code quality indicators
+       
         analysis['quality'] = {
             'has_docstrings': bool(self.compiled_patterns['docstrings'].findall(code)),
             'has_type_hints': bool(self.compiled_patterns['type_hints'].findall(code)),
@@ -548,15 +530,15 @@ class EnhancedCodeAnalyzer:
         start_time = time.time()
         features = self.extract_features_fast(code)
         
-        # Get comprehensive analysis
+       
         comprehensive_analysis = self.analyze_code_comprehensive(code)
         
         if self.neural_model is not None and self.scaler is not None:
             try:
-                # Scale features
+              
                 features_scaled = self.scaler.transform([features])
                 
-                # Make prediction
+               
                 prediction = self.neural_model.predict(features_scaled)[0]
                 probability = self.neural_model.predict_proba(features_scaled)[0]
                 raw_ai = probability[1] if len(probability) > 1 else probability[0] 
@@ -596,11 +578,11 @@ class EnhancedCodeAnalyzer:
 
     def _rule_based_prediction(self, code: str, features: List[float], analysis: Dict, elapsed: float) -> Dict:
         """Rule-based prediction as fallback with comprehensive analysis"""
-        # Enhanced heuristics
+       
         ai_indicators = 0
         human_indicators = 0
         
-        # Check for AI-like patterns
+        
         if features[0] > 1000:  # Long code
             ai_indicators += 1
         if features[1] > 50:  # Many lines
@@ -612,7 +594,7 @@ class EnhancedCodeAnalyzer:
         if analysis['complexity']['functions'] > 5:  # Many functions
             ai_indicators += 1
         
-        # Check for human-like patterns
+        
         if 50 <= features[0] <= 500:  # Moderate length
             human_indicators += 1
         if features[1] < 30:  # Fewer lines
@@ -631,7 +613,7 @@ class EnhancedCodeAnalyzer:
         else:
             confidence_raw = max(ai_indicators, human_indicators) / max(total_indicators, 1)
 
-# Apply smoothing (avoid 0% or 100%)
+
             confidence = 0.15 + 0.7 * confidence_raw
 
             if ai_indicators > human_indicators:
@@ -658,4 +640,5 @@ class EnhancedCodeAnalyzer:
             'processing_time': elapsed,
             'comprehensive_analysis': analysis,
             'model_type': 'enhanced_rule_based'
+
         } 
