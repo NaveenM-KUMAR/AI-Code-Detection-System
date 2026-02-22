@@ -1,4 +1,3 @@
-// AI Code Detector Web Application JavaScript
 
 class AICodeDetector {
     constructor() {
