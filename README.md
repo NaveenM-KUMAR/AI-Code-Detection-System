@@ -18,8 +18,8 @@ AI Code Detection is a web application that helps determine whether a given piec
 To install, clone the repository and navigate to the directory:
 
 ```bash
-git clone https://github.com/Aseema-s/AICodeDetection.git
-cd AICodeDetection
+git clone https://github.com/NaveenM-KUMAR/AI-Code-Detection-System.git
+
 ```
 <img width="1878" height="804" alt="ai code ph" src="https://github.com/user-attachments/assets/b256aad3-d87c-4829-932d-8d2eae9bf239" />
 <img width="1874" height="798" alt="ai code ph1" src="https://github.com/user-attachments/assets/58d2884a-dfac-4a5b-9c3c-3f321cb8a2ce" />
