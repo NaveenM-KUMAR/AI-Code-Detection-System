@@ -14,7 +14,6 @@
     --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
     --border-radius: 8px;
 }
-
 * {
     margin: 0;
     padding: 0;
@@ -436,4 +435,5 @@ body {
 .alert-info {
     background: rgba(74, 144, 226, 0.1);
     color: var(--primary-color);
+
 } 
