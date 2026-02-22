@@ -1,3 +1,4 @@
+
 import re
 import ast
 import numpy as np
@@ -15,6 +16,7 @@ import joblib
 from sklearn.preprocessing import StandardScaler
 import warnings
 warnings.filterwarnings('ignore')
+import javalang
 
 class EnhancedCodeAnalyzer:
     def __init__(self):
@@ -61,40 +63,81 @@ class EnhancedCodeAnalyzer:
             'private_methods': re.compile(r'_\w+'),
             'constants': re.compile(r'^[A-Z_][A-Z0-9_]*\s*=', re.MULTILINE)
         }
+        def _temperature_scale(self, prob, T=2.5):
+            """Smooths probabilities so they aren't extreme."""
+            prob = np.clip(prob, 1e-8, 1 - 1e-8)
+            logit = np.log(prob / (1 - prob))
+            scaled = 1 / (1 + np.exp(-logit / T))
+            return scaled
         
         # Load models in background
         self._load_models()
         print("Enhanced Code Analyzer initialized (Comprehensive Analysis)")
 
-    def _load_models(self):
-        """Load neural models if available"""
+    def _detect_language(self, code: str) -> str:
+        """Detect programming language using Pygments"""
         try:
-            # Try to load improved models first
-            if os.path.exists('models/improved_neural_model.pkl'):
-                self.neural_model = joblib.load('models/improved_neural_model.pkl')
-                print("Loaded improved neural model")
-            elif os.path.exists('models/simple_neural_model.pkl'):
-                self.neural_model = joblib.load('models/simple_neural_model.pkl')
-                print("Loaded simple neural model")
-                
-            if os.path.exists('models/improved_scaler.pkl'):
-                self.scaler = joblib.load('models/improved_scaler.pkl')
-                print("Loaded improved scaler")
-            elif os.path.exists('models/simple_neural_scaler.pkl'):
-                self.scaler = joblib.load('models/simple_neural_scaler.pkl')
-                print("Loaded simple neural scaler")
-                
-            if os.path.exists('models/improved_label_encoder.pkl'):
-                self.label_encoder = joblib.load('models/improved_label_encoder.pkl')
-                print("Loaded improved label encoder")
-            elif os.path.exists('models/simple_neural_label_encoder.pkl'):
-                self.label_encoder = joblib.load('models/simple_neural_label_encoder.pkl')
-                print("Loaded simple neural label encoder")
-            
-            print("Enhanced models loaded successfully")
+            lexer = guess_lexer(code)
+            return lexer.name.lower()
+        except:
+            return "unknown"
+
+    def _load_models(self):
+
+        """Load neural and preprocessing models in correct priority order."""
+        try:
+            model_dir = "/mnt/data"
+
+        # --- PRIMARY MODELS (Improved) ---
+            improved_model = os.path.join(model_dir, "improved_neural_model.pkl")
+            improved_scaler = os.path.join(model_dir, "improved_scaler.pkl")
+            improved_encoder = os.path.join(model_dir, "improved_label_encoder.pkl")
+
+        # --- FALLBACK MODELS (Simple) ---
+            simple_model = os.path.join(model_dir, "simple_neural_model.pkl")
+            simple_scaler = os.path.join(model_dir, "simple_neural_scaler.pkl")
+            simple_encoder = os.path.join(model_dir, "simple_neural_label_encoder.pkl")
+
+        # -------------------------------
+        # Load MODEL (primary → fallback)
+        # -------------------------------
+            if os.path.exists(improved_model):
+                self.neural_model = joblib.load(improved_model)
+                print("Loaded: improved_neural_model.pkl")
+            elif os.path.exists(simple_model):
+                self.neural_model = joblib.load(simple_model)
+                print("Loaded: simple_neural_model.pkl")
+            else:
+                print("❌ No neural model found")
+
+        # -------------------------------
+        # Load SCALER (primary → fallback)
+        # -------------------------------
+            if os.path.exists(improved_scaler):
+                self.scaler = joblib.load(improved_scaler)
+                print("Loaded: improved_scaler.pkl")
+            elif os.path.exists(simple_scaler):
+                self.scaler = joblib.load(simple_scaler)
+                print("Loaded: simple_neural_scaler.pkl")
+            else:
+                print("❌ No scaler found")
+
+        # -----------------------------------------
+        # Load LABEL ENCODER (primary → fallback)
+        # -----------------------------------------
+            if os.path.exists(improved_encoder):
+                self.label_encoder = joblib.load(improved_encoder)
+                print("Loaded: improved_label_encoder.pkl")
+            elif os.path.exists(simple_encoder):
+                self.label_encoder = joblib.load(simple_encoder)
+                print("Loaded: simple_neural_label_encoder.pkl")
+            else:
+                print("❌ No label encoder found")
+
+            print("✔ All models loaded successfully (with fallback support)")
+
         except Exception as e:
-            print(f"Warning: Could not load neural models: {e}")
-            print("Falling back to traditional features only")
+            print(f"❌ ERROR: Failed loading models → {e}")
 
     @lru_cache(maxsize=2000)
     def extract_features_fast(self, code: str) -> List[float]:
@@ -119,108 +162,176 @@ class EnhancedCodeAnalyzer:
         features = basic_features + advanced_features + style_features + enhanced_features + comprehensive_features
         
         # Always return exactly 80 features
-        if len(features) < 80:
-            features += [0.0] * (80 - len(features))
-        elif len(features) > 80:
-            features = features[:80]
+        # Always return EXACTLY 80 features
+        # FINAL FIX — exactly 70 features
+        if len(features) < 70:
+            features += [0.0] * (70 - len(features))
+        elif len(features) > 70:
+            features = features[:70]
         
         elapsed = time.time() - start_time
         print(f"Enhanced feature extraction completed in {elapsed:.3f}s (features: {len(features)})")
         return features
 
     def _extract_basic_features(self, code: str) -> List[float]:
-        """Extract basic code statistics (optimized)"""
+        """Extract basic code statistics (safe + consistent)."""
         features = []
-        
-        # Length features
-        features.append(len(code))
-        features.append(code.count('\n'))
-        features.append(len(code.split()))
-        
-        # Character distribution (optimized)
-        alpha_count = sum(1 for c in code if c.isalpha())
-        digit_count = sum(1 for c in code if c.isdigit())
-        space_count = sum(1 for c in code if c.isspace())
-        bracket_count = sum(1 for c in code if c in '{}[]()')
-        punct_count = sum(1 for c in code if c in ';:,.')
-        
-        features.extend([alpha_count, digit_count, space_count, bracket_count, punct_count])
-        
-        # Line statistics (optimized)
-        lines = code.split('\n')
-        line_count = len(lines)
-        if line_count > 0:
-            line_lengths = [len(line) for line in lines]
-            features.extend([line_count, np.mean(line_lengths), np.std(line_lengths)])
+
+    # Basic lengths
+        features.append(len(code))                  # 1
+        features.append(code.count("\n"))           # 2
+        features.append(len(code.split()))          # 3
+
+    # Character distribution
+        # Character distribution
+        alpha = sum(c.isalpha() for c in code)
+        digit = sum(c.isdigit() for c in code)
+        space = sum(c.isspace() for c in code)
+        brackets = sum(c in "{}[]()" for c in code)
+        punct = sum(c in ";:,." for c in code)
+        features += [alpha, digit, space, brackets, punct]
+
+    # Line statistics
+        lines = code.split("\n")
+        lengths = [len(l) for l in lines if l.strip()]
+        if lengths:
+            features += [                          # 9–11
+                len(lines),
+                float(np.mean(lengths)),
+                float(np.std(lengths))
+        ]
         else:
-            features.extend([0, 0, 0])
-        
+            features += [0, 0.0, 0.0]
+
         return features
+    
+    
+    def _extract_java_features(self, code: str) -> List[int]:
+
+        """Extract Java features (aligned to Python equivalent)."""
+        try:
+            tree = javalang.parse.parse(code)
+
+            method_count = 0
+            class_count = 0
+            loop_count = 0
+            cond_count = 0
+
+            for _, node in tree:
+                if isinstance(node, javalang.tree.ClassDeclaration):
+                    class_count += 1
+                if isinstance(node, javalang.tree.MethodDeclaration):
+                    method_count += 1
+                if isinstance(node, (javalang.tree.ForStatement, javalang.tree.WhileStatement)):
+                    loop_count += 1
+                if isinstance(node, javalang.tree.IfStatement):
+                    cond_count += 1
+
+            import_count = len(tree.imports)
+
+        # RETURNS EXACTLY 8 values like Python block
+            return [
+                method_count,      # functions
+                class_count,       # classes
+                import_count,      # imports
+                0,                 # imports_from
+                0,                 # calls (not counted)
+                0,                 # assignments
+                loop_count,        # loops
+                cond_count         # conditionals
+        ]
+
+        except:
+            return [0] * 8
+        
+    def _extract_generic_features(self, code: str) -> List[int]:
+        """Generic fallback for JS, C, C++, PHP… returns same 8 fields."""
+        functions = len(re.findall(r"\w+\s*\(", code))
+        classes = len(re.findall(r"class\s+\w+", code, re.IGNORECASE))
+        loops = len(re.findall(r"\bfor\b|\bwhile\b", code))
+        conditionals = len(re.findall(r"\bif\b", code))
+        imports = len(re.findall(r"import\s+", code))
+
+        return [
+            functions,     # functions
+            classes,       # classes
+            imports,       # imports
+            0,             # imports_from
+            0,             # calls
+            0,             # assignments
+            loops,         # loops
+            conditionals   # conditionals
+    ]
 
     def _extract_advanced_features_cached(self, code: str) -> List[float]:
-        """Extract advanced code features with caching (optimized)"""
         features = []
-        
-        # Comment analysis (optimized)
-        lines = code.split('\n')
-        comment_lines = sum(1 for line in lines if line.strip().startswith(('#', '//', '/*', '*')))
-        features.append(comment_lines)
-        features.append(comment_lines / max(len(lines), 1))
-        
-        # Function and class analysis (optimized)
-        try:
-            tree = ast.parse(code)
-            functions = len([node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)])
-            classes = len([node for node in ast.walk(tree) if isinstance(node, ast.ClassDef)])
-            imports = len([node for node in ast.walk(tree) if isinstance(node, ast.Import)])
-            imports_from = len([node for node in ast.walk(tree) if isinstance(node, ast.ImportFrom)])
-            calls = len([node for node in ast.walk(tree) if isinstance(node, ast.Call)])
-            assignments = len([node for node in ast.walk(tree) if isinstance(node, ast.Assign)])
-            loops = len([node for node in ast.walk(tree) if isinstance(node, (ast.For, ast.While))])
-            conditionals = len([node for node in ast.walk(tree) if isinstance(node, ast.If)])
-        except:
-            functions = classes = imports = imports_from = calls = assignments = loops = conditionals = 0
-        
-        features.extend([functions, classes, imports, imports_from, calls, assignments, loops, conditionals])
-        
-        # Complexity metrics (optimized)
-        features.append(code.count('if') + code.count('elif') + code.count('else'))
-        features.append(code.count('for') + code.count('while'))
-        features.append(code.count('try') + code.count('except') + code.count('finally'))
-        
-        return features
 
-    def _extract_style_features(self, code: str) -> List[float]:
-        """Extract code style and formatting features (optimized)"""
-        features = []
-        
-        # Indentation analysis (optimized)
-        lines = code.split('\n')
-        indent_levels = []
-        for line in lines:
-            if line.strip():
-                indent = len(line) - len(line.lstrip())
-                indent_levels.append(indent)
-        
-        if indent_levels:
-            features.extend([np.mean(indent_levels), np.std(indent_levels), max(indent_levels)])
+        # Comment ratio
+        lines = code.split("\n")
+        comment_lines = sum(l.strip().startswith(("#", "//", "/*")) for l in lines)
+        features.append(comment_lines)                             # 1
+        features.append(comment_lines / max(len(lines), 1))        # 2
+
+    # Language detection
+        lang = self._detect_language(code)
+
+        if "java" in lang:
+            features += self._extract_java_features(code)
+        elif "python" in lang:
+            try:
+                tree = ast.parse(code)
+                functions = len([n for n in ast.walk(tree) if isinstance(n, ast.FunctionDef)])
+                classes = len([n for n in ast.walk(tree) if isinstance(n, ast.ClassDef)])
+                imports = len([n for n in ast.walk(tree) if isinstance(n, ast.Import)])
+                imports_from = len([n for n in ast.walk(tree) if isinstance(n, ast.ImportFrom)])
+                calls = len([n for n in ast.walk(tree) if isinstance(n, ast.Call)])
+                assignments = len([n for n in ast.walk(tree) if isinstance(n, ast.Assign)])
+                loops = len([n for n in ast.walk(tree) if isinstance(n, (ast.For, ast.While))])
+                conditionals = len([n for n in ast.walk(tree) if isinstance(n, ast.If)])
+            except:
+                functions = classes = imports = imports_from = calls = assignments = loops = conditionals = 0
+
+            features += [
+                functions,
+                classes,
+                imports,
+                imports_from,
+                calls,
+                assignments,
+                loops,
+                conditionals
+        ]
         else:
-            features.extend([0, 0, 0])
-        
-        # Naming conventions (optimized)
-        words = self.compiled_patterns['words'].findall(code)
-        camel_case = sum(1 for word in words if re.match(r'^[a-z]+[A-Z]', word))
-        snake_case = sum(1 for word in words if '_' in word)
-        pascal_case = sum(1 for word in words if re.match(r'^[A-Z][a-zA-Z0-9]*$', word))
-        
-        features.extend([camel_case, snake_case, pascal_case])
-        
-        # Code structure (optimized)
-        features.append(code.count('def '))
-        features.append(code.count('class '))
-        features.append(code.count('import '))
-        features.append(code.count('from '))
-        
+            features += self._extract_generic_features(code)
+
+        return features
+    
+    
+    def _extract_style_features(self, code: str) -> List[float]:
+        features = []
+
+        lines = code.split("\n")
+        indents = [len(l) - len(l.lstrip()) for l in lines if l.strip()]
+
+        if indents:
+            features += [float(np.mean(indents)), float(np.std(indents)), float(max(indents))]
+        else:
+            features += [0.0, 0.0, 0.0]
+
+        words = self.compiled_patterns["words"].findall(code)
+        camel = sum(1 for w in words if re.match(r"^[a-z]+[A-Z]", w))
+        snake = sum("_" in w for w in words)
+        pascal = sum(re.match(r"^[A-Z][a-zA-Z0-9]*$", w) is not None for w in words)
+
+        features += [camel, snake, pascal]
+
+        features += [
+            code.count("def "),
+            code.count("class "),
+            code.count("import "),
+            code.count("from ")
+    ]
+
         return features
 
     def _extract_enhanced_features(self, code: str) -> List[float]:
@@ -281,10 +392,9 @@ class EnhancedCodeAnalyzer:
         return features
 
     def _extract_comprehensive_features(self, code: str) -> List[float]:
-        """Extract comprehensive analysis features"""
         features = []
-        
-        # Advanced features
+
+    # pattern-based features
         features.append(len(self.compiled_patterns['type_hints'].findall(code)))
         features.append(len(self.compiled_patterns['f_strings'].findall(code)))
         features.append(len(self.compiled_patterns['list_comprehensions'].findall(code)))
@@ -297,33 +407,40 @@ class EnhancedCodeAnalyzer:
         features.append(len(self.compiled_patterns['magic_methods'].findall(code)))
         features.append(len(self.compiled_patterns['private_methods'].findall(code)))
         features.append(len(self.compiled_patterns['constants'].findall(code)))
-        
-        # Code entropy (complexity measure)
+
+    # entropy
         char_freq = Counter(code)
         total_chars = len(code)
         if total_chars > 0:
-            entropy = -sum((freq/total_chars) * math.log2(freq/total_chars) for freq in char_freq.values())
+            entropy = -sum((freq / total_chars) * math.log2(freq / total_chars)
+                       for freq in char_freq.values())
             features.append(entropy)
         else:
             features.append(0)
-        
-        # Unique identifier ratio
+
+    # unique identifier ratio
         words = self.compiled_patterns['words'].findall(code)
         unique_words = len(set(words))
         features.append(unique_words / max(len(words), 1))
-        
-        # Function complexity (average function length)
-        try:
-            tree = ast.parse(code)
-            functions = len([node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)])
-            if functions > 0:
-                features.append(len(code) / functions)
-            else:
+
+    # function length (Python only)
+        lang = self._detect_language(code)
+        if "python" in lang:
+            try:
+                tree = ast.parse(code)
+                functions = [node for node in ast.walk(tree) if isinstance(node, ast.FunctionDef)]
+                if len(functions) > 0:
+                    features.append(len(code) / len(functions))
+                else:
+                    features.append(0)
+            except:
                 features.append(0)
-        except:
+        else:
             features.append(0)
-        
+
         return features
+    
+        
 
     def analyze_code_comprehensive(self, code: str) -> Dict:
         """Comprehensive code analysis with detailed insights"""
@@ -442,8 +559,24 @@ class EnhancedCodeAnalyzer:
                 # Make prediction
                 prediction = self.neural_model.predict(features_scaled)[0]
                 probability = self.neural_model.predict_proba(features_scaled)[0]
+                raw_ai = probability[1] if len(probability) > 1 else probability[0] 
+                raw_human = probability[0] if len(probability) > 1 else (1 - raw_ai)
+
+                scaled_ai = self._temperature_scale(raw_ai, T=2.5)
+                scaled_human = 1 - scaled_ai
+
+                confidence = max(scaled_ai, scaled_human)
+                ai_probability = float(np.clip(ai_probability, 0.05, 0.95))
+                human_probability = 1 - ai_probability
+                confidence = max(ai_probability, human_probability)
                 
+                
+                ai_probability = scaled_ai
+                human_probability = scaled_human
                 elapsed = time.time() - start_time
+                
+                
+                
                 return {
                     'prediction': 'AI' if prediction == 1 else 'Human',
                     'confidence': float(max(probability)),
@@ -496,8 +629,24 @@ class EnhancedCodeAnalyzer:
             confidence = 0.5
             prediction = 'Human'
         else:
-            confidence = max(ai_indicators, human_indicators) / total_indicators
-            prediction = 'AI' if ai_indicators > human_indicators else 'Human'
+            confidence_raw = max(ai_indicators, human_indicators) / max(total_indicators, 1)
+
+# Apply smoothing (avoid 0% or 100%)
+            confidence = 0.15 + 0.7 * confidence_raw
+
+            if ai_indicators > human_indicators:
+                prediction = "AI"
+                ai_probability = confidence
+                human_probability = 1 - confidence
+            else:
+                prediction = "Human"
+                human_probability = confidence
+                ai_probability = 1 - confidence
+                
+            ai_probability = float(np.clip(ai_probability, 0.05, 0.95))
+            human_probability = 1 - ai_probability
+            confidence = max(ai_probability, human_probability)
+
         
         return {
             'prediction': prediction,

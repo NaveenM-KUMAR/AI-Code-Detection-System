@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # AI Code Detection
 
 AI Code Detection is a web application that helps determine whether a given piece of code is AI-generated or human-written. It offers both code analysis via text input and file upload options, supporting multiple languages including Python, JavaScript, HTML, CSS and so on.
@@ -26,3 +27,7 @@ cd AICodeDetection
 <img width="817" height="870" alt="ai code ph3" src="https://github.com/user-attachments/assets/d6f8c432-3fb4-48fb-a419-2ac32ddd4b9c" />
 <img width="834" height="892" alt="ai code ph4" src="https://github.com/user-attachments/assets/636314c1-9d69-4df6-a75a-75cfcab0f399" />
 
+=======
+# AI-Code-Detection-System
+An AI-powered system that classifies code as human-written or AI-generated using feature extraction and heuristics.
+>>>>>>> 9f0cea0ade203635233c0187d08d74f82bc70e76

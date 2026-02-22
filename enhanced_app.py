@@ -78,58 +78,73 @@ def extract_code_from_file(file_path):
     """Extract code from various file types"""
     try:
         file_ext = file_path.rsplit('.', 1)[1].lower()
-        
+
+        # --- PDF SUPPORT ---
         if file_ext == 'pdf':
             if not PyPDF2:
                 return None, "PDF support not installed"
-            with open(file_path, 'rb') as file:
-                pdf_reader = PyPDF2.PdfReader(file)
-                text = ''
-                for page in pdf_reader.pages:
-                    text += page.extract_text() or ''
-            return text.strip(), None
-            
+
+            text = ""
+            try:
+                with open(file_path, 'rb') as file:
+                    reader = PyPDF2.PdfReader(file)
+
+                    for page in reader.pages:
+                        try:
+                            extracted = page.extract_text()
+                            if extracted:
+                                text += extracted + "\n"
+                        except:
+                            continue
+
+                if text.strip() == "":
+                    return None, "PDF has no readable text (maybe scanned)."
+
+                return text.strip(), None
+
+            except Exception as e:
+                return None, f"PDF read error: {str(e)}"
+
+        # --- ZIP/RAR/7Z SUPPORT ---
         elif file_ext in ['zip', 'rar', '7z']:
-            # Extract archive and analyze all code files
             extracted_dir = tempfile.mkdtemp()
             try:
                 if file_ext == 'zip':
                     with zipfile.ZipFile(file_path, 'r') as zip_ref:
                         zip_ref.extractall(extracted_dir)
-                
-                # Find all code files in extracted directory
+
                 code_files = []
                 for root, dirs, files in os.walk(extracted_dir):
                     for file in files:
-                        if file.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS:
-                            code_files.append(os.path.join(root, file))
-                
+                        if '.' in file:
+                            ext = file.rsplit('.', 1)[1].lower()
+                            if ext in ALLOWED_EXTENSIONS:
+                                code_files.append(os.path.join(root, file))
+
                 if not code_files:
                     return None, "No code files found in archive"
-                
-                # Combine all code files
+
                 combined_code = ""
-                for code_file in code_files[:10]:  # Limit to first 10 files
+                for code_file in code_files[:10]:
                     try:
                         with open(code_file, 'r', encoding='utf-8', errors='ignore') as f:
                             combined_code += f"\n# File: {os.path.basename(code_file)}\n"
                             combined_code += f.read() + "\n"
                     except Exception as e:
                         combined_code += f"\n# Error reading {os.path.basename(code_file)}: {str(e)}\n"
-                
+
                 return combined_code.strip(), None
-                
+
             finally:
                 shutil.rmtree(extracted_dir, ignore_errors=True)
-        
+
+        # --- NORMAL FILES ---
         else:
-            # Regular text/code files
             with open(file_path, 'r', encoding='utf-8', errors='ignore') as f:
                 return f.read(), None
-                
+
     except Exception as e:
         return None, f"Error reading file: {str(e)}"
-
 def estimate_processing_time(code_length):
     """Estimate processing time based on code length"""
     # Base time: 0.1s for small code, scales with length
