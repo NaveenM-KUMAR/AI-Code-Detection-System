@@ -1,4 +1,4 @@
-/* Global Styles */
+
 :root {
     --primary-color: #4a90e2;
     --secondary-color: #f39c12;
@@ -27,7 +27,6 @@ body {
     color: var(--text-primary);
 }
 
-/* Sidebar Styles */
 .sidebar {
     background: var(--sidebar-bg);
     min-height: 100vh;
@@ -51,7 +50,6 @@ body {
     margin-right: 0.5rem;
 }
 
-/* Main Content Styles */
 .main-content {
     background: rgba(255, 255, 255, 0.95);
     min-height: 100vh;
@@ -62,7 +60,6 @@ body {
     padding: 2rem;
 }
 
-/* Code Input Section */
 .code-input-section {
     background: var(--card-bg);
     padding: 2rem;
@@ -87,7 +84,7 @@ body {
     box-shadow: 0 0 0 0.2rem rgba(74, 144, 226, 0.25);
 }
 
-/* Results Section */
+
 .results-card {
     background: var(--card-bg);
     padding: 2rem;
@@ -108,7 +105,7 @@ body {
     font-weight: 600;
 }
 
-/* Prediction Display */
+
 .prediction-display {
     text-align: center;
 }
@@ -154,7 +151,6 @@ body {
     color: var(--text-secondary);
 }
 
-/* Probability Bars */
 
 
 .prob-item {
@@ -186,7 +182,6 @@ body {
     font-weight: 600;
 }
 
-/* Analysis Details */
 .analysis-details {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
@@ -212,7 +207,7 @@ body {
     color: var(--primary-color);
 }
 
-/* Loading Spinner */
+
 .loading-spinner {
     padding: 3rem;
     color: var(--primary-color);
@@ -222,7 +217,6 @@ body {
     color: var(--primary-color);
 }
 
-/* Model Status */
 .model-status {
     background: rgba(255, 255, 255, 0.1);
     padding: 1rem;
@@ -258,7 +252,7 @@ body {
     100% { opacity: 1; }
 }
 
-/* Feature Importance */
+
 .feature-importance {
     background: rgba(255, 255, 255, 0.1);
     padding: 1rem;
@@ -287,7 +281,7 @@ body {
     color: var(--primary-color);
 }
 
-/* Buttons */
+
 .btn {
     border-radius: var(--border-radius);
     font-weight: 500;
@@ -334,7 +328,7 @@ body {
     margin-right: 0.5rem;
 }
 
-/* Responsive Design */
+
 @media (max-width: 768px) {
     .sidebar {
         min-height: auto;
@@ -372,7 +366,7 @@ body {
     }
 }
 
-/* Animations */
+
 .fade-in {
     animation: fadeIn 0.5s ease-in;
 }
@@ -409,13 +403,11 @@ body {
     background: var(--dark-color);
 }
 
-/* Code Syntax Highlighting */
 .code-textarea {
     background: #f8f9fa;
     color: #2c3e50;
 }
 
-/* Success/Error States */
 .alert {
     border-radius: var(--border-radius);
     border: none;
@@ -437,3 +429,4 @@ body {
     color: var(--primary-color);
 
 } 
+
